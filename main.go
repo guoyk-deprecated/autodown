@@ -74,12 +74,10 @@ func main() {
 func handleDeployments(client *kubernetes.Clientset, dps *appsv1.DeploymentList) (err error) {
 	for _, dp := range dps.Items {
 		if dp.Annotations == nil {
-			log.Printf("deployment: %s, no annotations", dp.Name)
 			continue
 		}
 		var leaseStr string
 		if leaseStr = dp.Annotations[AnnotationLease]; leaseStr == "" {
-			log.Printf("deployment: %s, no lease", dp.Name)
 			continue
 		}
 		var lease time.Duration
@@ -114,12 +112,10 @@ func handleDeployments(client *kubernetes.Clientset, dps *appsv1.DeploymentList)
 func handleStatefulSets(client *kubernetes.Clientset, sts *appsv1.StatefulSetList) (err error) {
 	for _, st := range sts.Items {
 		if st.Annotations == nil {
-			log.Printf("statefulset: %s, no annotations", st.Name)
 			continue
 		}
 		var leaseStr string
 		if leaseStr = st.Annotations[AnnotationLease]; leaseStr == "" {
-			log.Printf("statefulset: %s, no lease", st.Name)
 			continue
 		}
 		var lease time.Duration

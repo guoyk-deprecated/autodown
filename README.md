@@ -61,10 +61,12 @@ spec:
   schedule: "5 2 * * *"
   jobTemplate:
     spec:
-      serviceAccount: autodown
-      containers:
-        - name: autodown
-          image: guoyk/autodown
+      template:
+        spec:
+          serviceAccount: autodown
+          containers:
+            - name: autodown
+              image: guoyk/autodown
           restartPolicy: OnFailure
 ```
 
