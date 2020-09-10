@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -34,8 +35,35 @@ func exit(err *error) {
 	}
 }
 
+func buildLoggerWhitespaces(l int) string {
+	if l < 12 {
+		return strings.Repeat(" ", 12-l)
+	} else if l < 24 {
+		return strings.Repeat(" ", 24-l)
+	} else if l < 36 {
+		return strings.Repeat(" ", 36-l)
+	} else if l < 48 {
+		return strings.Repeat(" ", 48-l)
+	} else {
+		return ""
+	}
+}
+
+func buildLogger(dp string) func(s string) {
+	sb := &strings.Builder{}
+	sb.WriteString("└ deployment: [")
+	sb.WriteString(dp)
+	sb.WriteString("] ")
+	sb.WriteString(buildLoggerWhitespaces(len(dp)))
+	h := sb.String()
+	return func(s string) {
+		log.Println(h + s)
+	}
+}
+
 func main() {
 	log.SetOutput(os.Stdout)
+	log.SetFlags(log.Ltime | log.Lmsgprefix)
 	if optDryRun {
 		log.SetPrefix("[autodown (dry)] ")
 	} else {
@@ -68,6 +96,7 @@ func main() {
 		}
 
 		for _, dp := range dpList.Items {
+			dpLog := buildLogger(dp.Name)
 			// check annotations exists
 			if dp.Annotations == nil {
 				continue
@@ -79,19 +108,19 @@ func main() {
 			}
 			// get disabled annotation
 			if disabled, _ := strconv.ParseBool(dp.Annotations[AnnotationDisabled]); disabled {
-				log.Printf("└ deployment: [%s]\tautodown disabled", dp.Name)
+				dpLog("disabled, skipping")
 				continue
 			}
 			// parse lease annotation
 			var lease time.Duration
 			if lease, err = time.ParseDuration(leaseStr); err != nil {
-				log.Printf("└ deployment: [%s]\tfailed to parse lease duration '%s': %s", dp.Name, leaseStr, err.Error())
+				dpLog("failed to parse lease, skipping")
 				err = nil
 				continue
 			}
 			// check replicas
 			if dp.Status.Replicas == 0 {
-				log.Printf("└ deployment: [%s]\talready scaled to 0", dp.Name)
+				dpLog("already scaled to 0, skipping")
 				continue
 			}
 			// check update time
@@ -103,11 +132,11 @@ func main() {
 				}
 			}
 			if updateTime.IsZero() {
-				log.Printf("└ deployment: [%s]\tfailed to determine last update time", dp.Name)
+				dpLog("failed to determine last update time, skipping")
 				continue
 			}
 			if time.Since(updateTime) < lease {
-				log.Printf("└ deployment: [%s]\tlease not yet expired", dp.Name)
+				dpLog("lease not expired, skipping")
 				continue
 			}
 			// scale to 0
@@ -116,7 +145,7 @@ func main() {
 					return
 				}
 			}
-			log.Printf("└ deployment: [%s]\tscaled to 0", dp.Name)
+			dpLog("scaled to 0")
 		}
 	}
 }
