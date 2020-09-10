@@ -4,6 +4,6 @@ WORKDIR /go/src/app
 ADD . .
 RUN go build -o /autodown
 
-FROM scratch
+FROM alpine:3.12
 COPY --from=builder /autodown /autodown
 CMD ["/autodown"]
