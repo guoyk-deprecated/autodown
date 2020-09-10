@@ -107,7 +107,7 @@ func handleDeployments(client *kubernetes.Clientset, dps *appsv1.DeploymentList)
 			log.Printf("deployment: %s, already down", dp.Name)
 			continue
 		}
-		if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.JSONPatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
+		if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.StrategicMergePatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
 			return
 		}
 		log.Printf("deployment: %s, scaled to 0", dp.Name)
@@ -149,7 +149,7 @@ func handleStatefulSets(client *kubernetes.Clientset, sts *appsv1.StatefulSetLis
 			log.Printf("statefulset: %s, already down", st.Name)
 			continue
 		}
-		if _, err = client.AppsV1().StatefulSets(st.Namespace).Patch(context.Background(), st.Name, types.JSONPatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
+		if _, err = client.AppsV1().StatefulSets(st.Namespace).Patch(context.Background(), st.Name, types.StrategicMergePatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
 			return
 		}
 		log.Printf("statefulset: %s, scaled to 0", st.Name)
