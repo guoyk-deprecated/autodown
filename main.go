@@ -58,19 +58,28 @@ func main() {
 		}
 
 		for _, dp := range dpList.Items {
+			// check annotations exists
 			if dp.Annotations == nil {
 				continue
 			}
+			// get lease annotation
 			var leaseStr string
 			if leaseStr = dp.Annotations[AnnotationLease]; leaseStr == "" {
 				continue
 			}
+			// parse lease annotation
 			var lease time.Duration
 			if lease, err = time.ParseDuration(leaseStr); err != nil {
 				log.Printf("  deployment: %s, failed to parse lease duration '%s': %s", dp.Name, leaseStr, err.Error())
 				err = nil
 				continue
 			}
+			// check replicas
+			if dp.Status.Replicas == 0 {
+				log.Printf("  deployment: %s, already scaled to 0", dp.Name)
+				continue
+			}
+			// check update time
 			var updateTime time.Time
 			for _, cond := range dp.Status.Conditions {
 				t := cond.LastUpdateTime.Time
@@ -83,13 +92,10 @@ func main() {
 				continue
 			}
 			if time.Since(updateTime) < lease {
-				log.Printf("  deployment: %s, not yet", dp.Name)
+				log.Printf("  deployment: %s, lease not yet expired", dp.Name)
 				continue
 			}
-			if dp.Status.Replicas == 0 {
-				log.Printf("  deployment: %s, already scaled to 0", dp.Name)
-				continue
-			}
+			// scale to 0
 			if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.StrategicMergePatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
 				return
 			}
