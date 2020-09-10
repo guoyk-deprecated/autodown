@@ -12,9 +12,9 @@ automatically scale kubernetes deployments to zero after a period of time
 
 ## 使用方法
 
-1. 创建命名空间 `autodown`
+1. 创建命名空间 `autoops`
 
-2. 部署 `autodown` 到 Kubernetes 集群
+2. 部署 `autodown`
 
 ```yaml
 # 在 autodown 命名空间创建专用的 ServiceAccount
@@ -22,7 +22,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: autodown
-  namespace: autodown
+  namespace: autoops
 ---
 # 创建 ClusterRole autodown
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -49,14 +49,14 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: autodown
-    namespace: autodown
+    namespace: autoops
 ---
 # 创建 CronJob
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: autodown
-  namespace: autodown
+  namespace: autoops
 spec:
   schedule: "5 2 * * *"
   jobTemplate:
