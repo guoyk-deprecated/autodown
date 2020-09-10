@@ -34,7 +34,7 @@ rules:
     resources: ["namespaces"]
     verbs: ["list"]
   - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
+    resources: ["deployments/scale", "statefulsets/scale"]
     verbs: ["list", "update"]
 ---
 # 创建 ClusterRoleBinding
