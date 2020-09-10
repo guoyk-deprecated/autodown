@@ -36,14 +36,10 @@ func exit(err *error) {
 }
 
 func buildLoggerWhitespaces(l int) string {
-	if l < 12 {
-		return strings.Repeat(" ", 12-l)
-	} else if l < 24 {
-		return strings.Repeat(" ", 24-l)
-	} else if l < 36 {
-		return strings.Repeat(" ", 36-l)
+	if l < 24 {
+		return strings.Repeat("·", 24-l)
 	} else if l < 48 {
-		return strings.Repeat(" ", 48-l)
+		return strings.Repeat("·", 48-l)
 	} else {
 		return ""
 	}
@@ -55,6 +51,7 @@ func buildLogger(dp string) func(s string) {
 	sb.WriteString(dp)
 	sb.WriteString("] ")
 	sb.WriteString(buildLoggerWhitespaces(len(dp)))
+	sb.WriteRune(' ')
 	h := sb.String()
 	return func(s string) {
 		log.Println(h + s)
