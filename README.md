@@ -21,8 +21,8 @@ automatically scale kubernetes workload to zero after a period of time
 2. 为需要自动调整为 0 的工作负载（deployment/statefulset 等) 添加注解
 
 ```
-# 7d 代表 7 天
-net.guoyk.autodown/lease=7d
+# 168h 等于 7 天
+net.guoyk.autodown/lease=168h
 ```
 
 ## 许可证
