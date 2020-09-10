@@ -37,9 +37,9 @@ func exit(err *error) {
 
 func buildLoggerWhitespaces(l int) string {
 	if l < 24 {
-		return strings.Repeat("·", 24-l)
+		return strings.Repeat("-", 24-l)
 	} else if l < 48 {
-		return strings.Repeat("·", 48-l)
+		return strings.Repeat("-", 48-l)
 	} else {
 		return ""
 	}
