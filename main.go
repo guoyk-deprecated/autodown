@@ -71,18 +71,18 @@ func main() {
 				err = nil
 				continue
 			}
-			var updatedAt time.Time
+			var updateTime time.Time
 			for _, cond := range dp.Status.Conditions {
-				var condTime = cond.LastTransitionTime.Time
-				if !condTime.IsZero() && (updatedAt.IsZero() || condTime.After(updatedAt)) {
-					updatedAt = condTime
+				t := cond.LastUpdateTime.Time
+				if !t.IsZero() && (updateTime.IsZero() || t.After(updateTime)) {
+					updateTime = t
 				}
 			}
-			if updatedAt.IsZero() {
-				log.Printf("  deployment: %s, failed to determine last updated time", dp.Name)
+			if updateTime.IsZero() {
+				log.Printf("  deployment: %s, failed to determine last update time", dp.Name)
 				continue
 			}
-			if time.Since(updatedAt) < lease {
+			if time.Since(updateTime) < lease {
 				log.Printf("  deployment: %s, not yet", dp.Name)
 				continue
 			}
