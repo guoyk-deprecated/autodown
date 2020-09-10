@@ -101,6 +101,7 @@ func handleDeployments(client *kubernetes.Clientset, dps *appsv1.DeploymentList)
 			log.Printf("deployment: %s, nothing to do", dp.Name)
 			continue
 		}
+		log.Printf("deployment: %+v", dp.ObjectMeta)
 		if _, err = client.AppsV1().Deployments(dp.Namespace).UpdateScale(context.Background(), dp.Name, &autoscalingv1.Scale{Spec: autoscalingv1.ScaleSpec{Replicas: 0}}, metav1.UpdateOptions{}); err != nil {
 			return
 		}
@@ -139,6 +140,7 @@ func handleStatefulSets(client *kubernetes.Clientset, sts *appsv1.StatefulSetLis
 			log.Printf("statefulset: %s, nothing to do", st.Name)
 			continue
 		}
+		log.Printf("statefulset: %+v", st.ObjectMeta)
 		if _, err = client.AppsV1().StatefulSets(st.Namespace).UpdateScale(context.Background(), st.Name, &autoscalingv1.Scale{Spec: autoscalingv1.ScaleSpec{Replicas: 0}}, metav1.UpdateOptions{}); err != nil {
 			return
 		}
