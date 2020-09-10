@@ -12,13 +12,63 @@ automatically scale kubernetes workload to zero after a period of time
 
 ## 使用方法
 
-1. 部署 autodown 到 Kubernetes 集群
+1. 创建命名空间 `autodown`
+
+2. 部署 `autodown` 到 Kubernetes 集群
 
 ```yaml
-// TODO: 尚未完成
+# 在 autodown 命名空间创建专用的 ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: autodown
+  namespace: autodown
+---
+# 创建 ClusterRole autodown
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: autodown
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["list", "update"]
+---
+# 创建 ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: autodown
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: autodown
+subjects:
+  - kind: ServiceAccount
+    name: autodown
+    namespace: autodown
+---
+# 创建 CronJob
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: autodown
+  namespace: autodown
+spec:
+  schedule: "5 2 * * *"
+  jobTemplate:
+    spec:
+      serviceAccount: autodown
+      containers:
+        - name: autodown
+          image: guoyk/autodown
+          restartPolicy: OnFailure
 ```
 
-2. 为需要自动调整为 0 的工作负载（deployment/statefulset 等) 添加注解
+3. 为需要自动调整为 0 的工作负载（deployment/statefulset 等) 添加注解
 
 ```
 # 168h 等于 7 天
