@@ -2,13 +2,13 @@
 
 automatically scale kubernetes deployments to zero after a period of time
 
-自动在一定时间后，将 Kubernetes Deployment 副本数减小到 0
+自动在一定时间后，将 Kubernetes `Deployment` 副本数减小到 0
 
 ## 动机
 
 我司的基于 Kubernetes 的测试环境非常拥挤，很多人经常部署项目后就不再管了，而实际上当前正在测试的项目数量很，却占用了很多资源。
 
-因此我突发奇想设计了这样一个工具，在一定时间后，自动将 Deployment 副本数减小到 0，如果有需要继续使用，直接重新调整回正常副本数就可以了。
+因此我突发奇想设计了这样一个工具，在一定时间后，自动将 `Deployment` 副本数减小到 0，如果有需要继续使用，直接重新调整回正常副本数就可以了。
 
 ## 使用方法
 
@@ -70,14 +70,26 @@ spec:
           restartPolicy: OnFailure
 ```
 
-3. 为需要自动调整为 0 的 Deployment 添加注解
+3. 为需要自动调整为 `0` 的 `Deployment` 添加注解
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 annotations:
     # 168h 等于 7 天
     net.guoyk.autodown/lease: 168h
+# ....
+```
+
+4. 可以额外添加一个注解，用于在保留 `lease` 注解的条件下, 禁用 `autodown`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+annotations:
+    net.guoyk.autodown/lease: 168h
+    # 这条注解会停用 autodown
+    net.guoyk.autodown/disabled: "true" 
 # ....
 ```
 

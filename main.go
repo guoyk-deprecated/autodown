@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	AnnotationLease = "net.guoyk.autodown/lease"
+	AnnotationLease    = "net.guoyk.autodown/lease"
+	AnnotationDisabled = "net.guoyk.autodown/disabled"
 
 	patchReplicasZero = `{"spec":{"replicas": 0}}`
 )
@@ -59,7 +60,7 @@ func main() {
 	}
 
 	for _, ns := range nsList.Items {
-		log.Println("namespace:", ns.Name)
+		log.Printf("namespace: [%s]", ns.Name)
 
 		var dpList *appsv1.DeploymentList
 		if dpList, err = client.AppsV1().Deployments(ns.Name).List(context.Background(), metav1.ListOptions{}); err != nil {
@@ -76,16 +77,21 @@ func main() {
 			if leaseStr = dp.Annotations[AnnotationLease]; leaseStr == "" {
 				continue
 			}
+			// get disabled annotation
+			if disabled, _ := strconv.ParseBool(dp.Annotations[AnnotationDisabled]); disabled {
+				log.Printf("└ deployment: [%s]\tautodown disabled", dp.Name)
+				continue
+			}
 			// parse lease annotation
 			var lease time.Duration
 			if lease, err = time.ParseDuration(leaseStr); err != nil {
-				log.Printf("  deployment: %s, failed to parse lease duration '%s': %s", dp.Name, leaseStr, err.Error())
+				log.Printf("└ deployment: [%s]\tfailed to parse lease duration '%s': %s", dp.Name, leaseStr, err.Error())
 				err = nil
 				continue
 			}
 			// check replicas
 			if dp.Status.Replicas == 0 {
-				log.Printf("  deployment: %s, already scaled to 0", dp.Name)
+				log.Printf("└ deployment: [%s]\talready scaled to 0", dp.Name)
 				continue
 			}
 			// check update time
@@ -97,11 +103,11 @@ func main() {
 				}
 			}
 			if updateTime.IsZero() {
-				log.Printf("  deployment: %s, failed to determine last update time", dp.Name)
+				log.Printf("└ deployment: [%s]\tfailed to determine last update time", dp.Name)
 				continue
 			}
 			if time.Since(updateTime) < lease {
-				log.Printf("  deployment: %s, lease not yet expired", dp.Name)
+				log.Printf("└ deployment: [%s]\tlease not yet expired", dp.Name)
 				continue
 			}
 			// scale to 0
@@ -110,7 +116,7 @@ func main() {
 					return
 				}
 			}
-			log.Printf("  deployment: %s, scaled to 0", dp.Name)
+			log.Printf("└ deployment: [%s]\tscaled to 0", dp.Name)
 		}
 	}
 }
