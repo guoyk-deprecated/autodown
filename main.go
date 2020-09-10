@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/rest"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -17,6 +18,10 @@ const (
 	AnnotationLease = "net.guoyk.autodown/lease"
 
 	patchReplicasZero = `{"spec":{"replicas": 0}}`
+)
+
+var (
+	optDryRun, _ = strconv.ParseBool(os.Getenv("AUTODOWN_DRY_RUN"))
 )
 
 func exit(err *error) {
@@ -30,7 +35,11 @@ func exit(err *error) {
 
 func main() {
 	log.SetOutput(os.Stdout)
-	log.SetPrefix("[autodown] ")
+	if optDryRun {
+		log.SetPrefix("[autodown (dry)] ")
+	} else {
+		log.SetPrefix("[autodown] ")
+	}
 
 	var err error
 	defer exit(&err)
@@ -96,8 +105,10 @@ func main() {
 				continue
 			}
 			// scale to 0
-			if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.StrategicMergePatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
-				return
+			if !optDryRun {
+				if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.StrategicMergePatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
+					return
+				}
 			}
 			log.Printf("  deployment: %s, scaled to 0", dp.Name)
 		}
