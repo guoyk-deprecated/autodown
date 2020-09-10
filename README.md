@@ -1,14 +1,14 @@
 # autodown
 
-automatically scale kubernetes workload to zero after a period of time
+automatically scale kubernetes deployments to zero after a period of time
 
-自动在一定时间后，将 Kubernetes 工作负载副本数减小到 0
+自动在一定时间后，将 Kubernetes Deployment 副本数减小到 0
 
 ## 动机
 
 我司的基于 Kubernetes 的测试环境非常拥挤，很多人经常部署项目后就不再管了，而实际上当前正在测试的项目数量很，却占用了很多资源。
 
-因此我突发奇想设计了这样一个工具，在一定时间后，自动将工作负载副本数减小到 0，如果有需要继续使用，直接重新调整回正常副本数就可以了。
+因此我突发奇想设计了这样一个工具，在一定时间后，自动将 Deployment 副本数减小到 0，如果有需要继续使用，直接重新调整回正常副本数就可以了。
 
 ## 使用方法
 
@@ -34,7 +34,7 @@ rules:
     resources: ["namespaces"]
     verbs: ["list"]
   - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
+    resources: ["deployments"]
     verbs: ["list", "patch"]
 ---
 # 创建 ClusterRoleBinding
@@ -70,11 +70,15 @@ spec:
           restartPolicy: OnFailure
 ```
 
-3. 为需要自动调整为 0 的工作负载（deployment/statefulset 等) 添加注解
+3. 为需要自动调整为 0 的 Deployment 添加注解
 
 ```
-# 168h 等于 7 天
-net.guoyk.autodown/lease=168h
+apiVersion: apps/v1
+kind: Deployment
+annotations:
+    # 168h 等于 7 天
+    net.guoyk.autodown/lease: 168h
+# ....
 ```
 
 ## 许可证
