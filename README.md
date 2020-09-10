@@ -93,6 +93,8 @@ annotations:
 # ....
 ```
 
+**该注释也可以添加到 `Namespace` 上，禁用整个 `Namespace` 的 `autodown` 功能**
+
 ## 测试
 
 可以使用环境变量 `AUTODOWN_DRY_RUN=true` 来启动干跑模式，通过日志检查要执行的动作是否合理

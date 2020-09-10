@@ -85,6 +85,12 @@ func main() {
 	}
 
 	for _, ns := range nsList.Items {
+		if ns.Annotations != nil {
+			if disabled, _ := strconv.ParseBool(ns.Annotations[AnnotationDisabled]); disabled {
+				log.Printf("namespace: [%s] skipped", ns.Name)
+				continue
+			}
+		}
 		log.Printf("namespace: [%s]", ns.Name)
 
 		var dpList *appsv1.DeploymentList
