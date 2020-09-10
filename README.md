@@ -35,10 +35,7 @@ rules:
     verbs: ["list"]
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets"]
-    verbs: ["list"]
-  - apiGroups: ["apps"]
-    resources: ["deployments/scale", "statefulsets/scale"]
-    verbs: ["update"]
+    verbs: ["list", "update"]
 ---
 # 创建 ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1

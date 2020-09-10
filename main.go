@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"log"
@@ -15,6 +15,8 @@ import (
 
 const (
 	AnnotationLease = "net.guoyk.autodown/lease"
+
+	patchReplicasZero = `{"spec":{"replicas": 0}}`
 )
 
 func exit(err *error) {
@@ -101,8 +103,11 @@ func handleDeployments(client *kubernetes.Clientset, dps *appsv1.DeploymentList)
 			log.Printf("deployment: %s, nothing to do", dp.Name)
 			continue
 		}
-		log.Printf("deployment: %+v", dp.ObjectMeta)
-		if _, err = client.AppsV1().Deployments(dp.Namespace).UpdateScale(context.Background(), dp.Name, &autoscalingv1.Scale{Spec: autoscalingv1.ScaleSpec{Replicas: 0}}, metav1.UpdateOptions{}); err != nil {
+		if dp.Status.Replicas == 0 {
+			log.Printf("deployment: %s, already down", dp.Name)
+			continue
+		}
+		if _, err = client.AppsV1().Deployments(dp.Namespace).Patch(context.Background(), dp.Name, types.JSONPatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
 			return
 		}
 		log.Printf("deployment: %s, scaled to 0", dp.Name)
@@ -140,8 +145,11 @@ func handleStatefulSets(client *kubernetes.Clientset, sts *appsv1.StatefulSetLis
 			log.Printf("statefulset: %s, nothing to do", st.Name)
 			continue
 		}
-		log.Printf("statefulset: %+v", st.ObjectMeta)
-		if _, err = client.AppsV1().StatefulSets(st.Namespace).UpdateScale(context.Background(), st.Name, &autoscalingv1.Scale{Spec: autoscalingv1.ScaleSpec{Replicas: 0}}, metav1.UpdateOptions{}); err != nil {
+		if st.Status.Replicas == 0 {
+			log.Printf("statefulset: %s, already down", st.Name)
+			continue
+		}
+		if _, err = client.AppsV1().StatefulSets(st.Namespace).Patch(context.Background(), st.Name, types.JSONPatchType, []byte(patchReplicasZero), metav1.PatchOptions{}); err != nil {
 			return
 		}
 		log.Printf("statefulset: %s, scaled to 0", st.Name)
